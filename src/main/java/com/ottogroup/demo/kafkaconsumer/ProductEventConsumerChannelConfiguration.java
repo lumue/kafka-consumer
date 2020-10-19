@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.QueueChannel;
@@ -17,13 +17,8 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.messaging.PollableChannel;
 
 @Configuration
-public class ConsumerChannelConfiguration {
+public class ProductEventConsumerChannelConfiguration {
 
-  @Value("${spring.kafka.bootstrap-servers}")
-  private String bootstrapServers;
-
-  @Value("${spring.kafka.topic}")
-  private String springIntegrationKafkaTopic;
 
   @Bean
   public PollableChannel consumerChannel() {
@@ -42,9 +37,11 @@ public class ConsumerChannelConfiguration {
   @SuppressWarnings("unchecked")
   @Bean
   public ConcurrentMessageListenerContainer<String,String> kafkaListenerContainer(
+      ProductEventConsumerProperties productEventConsumerProperties,
       KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<?,?>> containerFactory)
   {
-    return (ConcurrentMessageListenerContainer<String, String>) containerFactory.createContainer(springIntegrationKafkaTopic);
+    return (ConcurrentMessageListenerContainer<String, String>) containerFactory.createContainer(
+        productEventConsumerProperties.getTopic());
   }
 
   @Bean
@@ -55,7 +52,6 @@ public class ConsumerChannelConfiguration {
   @Bean
   public Map<String,Object> consumerConfigs() {
     Map<String,Object> properties = new HashMap<>();
-    properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     properties.put(ConsumerConfig.GROUP_ID_CONFIG, "dummy");
